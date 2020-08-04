@@ -144,6 +144,7 @@ library(pROC)
 ROC <- roc(segment_new$segment_s, rfm_prob)
 plot(ROC, col = "red")
 auc(ROC)
+<<<<<<< HEAD
 
 #multiple logistic regression
 final_table <- merge(x=segment_new, final_df,by = "customer_id")
@@ -155,3 +156,5 @@ summary(logistics_model)
 ROC_2 <- roc(final_table$segment_s, logistics_model_prob)
 plot(ROC_2, col = "blue")
 auc(ROC_2)
+=======
+>>>>>>> 6c1b7c7579cc17893c660a66d1d99ed12121a8a1
