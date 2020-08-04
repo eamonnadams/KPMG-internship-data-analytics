@@ -3,6 +3,7 @@ install.packages("magrittr")
 install.packages("lubridate")
 install.packages("e1071")
 install.packages("rfm")
+install.packages("caret")
 library(readxl)
 library(dplyr)
 library(ggplot2)
@@ -11,6 +12,7 @@ library(magrittr)
 library(lubridate)
 library(e1071)
 library(rfm)
+library(caret)
 getwd()
 transactions <- read_excel("KPMG_VI_New_raw_data_update_final_Insights.xlsx",2)
 CustomerDemographics <- read_excel("KPMG_VI_New_raw_data_update_final_Insights.xlsx",4)
@@ -144,17 +146,37 @@ library(pROC)
 ROC <- roc(segment_new$segment_s, rfm_prob)
 plot(ROC, col = "red")
 auc(ROC)
-<<<<<<< HEAD
+
+
+#Split data into training and test set
+set.seed(123)
+final_table <- merge(x=segment_new, final_df,by = "customer_id")
+data2 = sort(sample(nrow(final_table), nrow(final_table)*.7))
+#creating training data set by selecting the output row values
+train <- final_table[data2,]
+#creating test data set by not selecting the output row values
+test <- final_table[-data2,]
+dim(train)
+dim(test)
 
 #multiple logistic regression
-final_table <- merge(x=segment_new, final_df,by = "customer_id")
 logistics_model <- glm(segment_s ~ (recency_s * frequency_s)+monetary_s + gender + Age + wealth_segment + tenure + 
-                         past_3_years_bike_related_purchases, data=final_table, family = "binomial")
-logistics_model_prob <- predict(logistics_model, data = final_table, type = "response")
+                         past_3_years_bike_related_purchases, data=train, family = "binomial")
+# to predict using the logistics regression model, probabilities obtained
+test[1:10,]
+logistics_model_prob <- predict(logistics_model, test, type = "response")
+head(logistics_model_prob,20)
 mean(logistics_model_prob)
+
+#prediction 
+prediction <- ifelse(logistics_model_prob > 0.5, 1,0)
+head(prediction,10)
+head(test$segment_s,10)
+
+#test of model 
 summary(logistics_model)
-ROC_2 <- roc(final_table$segment_s, logistics_model_prob)
+ROC_2 <- roc(test$segment_s, logistics_model_prob)
 plot(ROC_2, col = "blue")
 auc(ROC_2)
-=======
->>>>>>> 6c1b7c7579cc17893c660a66d1d99ed12121a8a1
+
+
