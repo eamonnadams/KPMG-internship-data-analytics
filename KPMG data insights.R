@@ -160,13 +160,12 @@ dim(train)
 dim(test)
 
 #multiple logistic regression
-logistics_model <- glm(segment_s ~ (recency_s * frequency_s)+monetary_s + gender + Age + wealth_segment + tenure + 
+logistics_model <- glm(segment_s ~ recency_s + frequency_s+monetary_s + gender + Age + wealth_segment + tenure + 
                          past_3_years_bike_related_purchases, data=train, family = "binomial")
 # to predict using the logistics regression model, probabilities obtained
 test[1:10,]
 logistics_model_prob <- predict(logistics_model, test, type = "response")
 head(logistics_model_prob,20)
-mean(logistics_model_prob)
 
 #prediction 
 prediction <- ifelse(logistics_model_prob > 0.5, 1,0)
@@ -178,5 +177,6 @@ summary(logistics_model)
 ROC_2 <- roc(test$segment_s, logistics_model_prob)
 plot(ROC_2, col = "blue")
 auc(ROC_2)
+mean(prediction == test$segment_s)
 
 
