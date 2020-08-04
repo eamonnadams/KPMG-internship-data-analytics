@@ -136,16 +136,6 @@ segment_new <- segments %>%
          segment_s = ifelse(segment %in% c("Champions","Loyal","Potential Loyalists",
                                            "New Customers", "Promising", "Need Attention", 
                                            "About To Sleep", "At Risk", "Can't Lose Them"),1,0))
-rfm_model <- glm(segment_s ~ (recency_s * frequency_s)+monetary_s, 
-                 data = segment_new, family = "binomial")
-rfm_model
-rfm_prob <- predict(rfm_model, data = segment_new, type = "response")
-rfm_prob
-# Plot the ROC curve for the new model
-library(pROC)
-ROC <- roc(segment_new$segment_s, rfm_prob)
-plot(ROC, col = "red")
-auc(ROC)
 
 
 #Split data into training and test set
@@ -160,7 +150,7 @@ dim(train)
 dim(test)
 
 #multiple logistic regression
-logistics_model <- glm(segment_s ~ recency_s + frequency_s+monetary_s + gender + Age + wealth_segment + tenure + 
+logistics_model <- glm(segment_s ~ recency_s + frequency_s+monetary_s + gender + Age + wealth_segment + 
                          past_3_years_bike_related_purchases, data=train, family = "binomial")
 # to predict using the logistics regression model, probabilities obtained
 test[1:10,]
