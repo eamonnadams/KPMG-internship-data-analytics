@@ -1,3 +1,4 @@
+#Install and load all necessary packages and libraries
 install.packages("DataExplorer")
 install.packages("magrittr")
 install.packages("lubridate")
@@ -16,6 +17,7 @@ library(rfm)
 library(caret)
 library(pROC)
 getwd()
+#Import dat from excel 
 transactions <- read_excel("KPMG_VI_New_raw_data_update_final_Insights.xlsx",2)
 CustomerDemographics <- read_excel("KPMG_VI_New_raw_data_update_final_Insights.xlsx",4)
 CustomerAddress <- read_excel("KPMG_VI_New_raw_data_update_final_Insights.xlsx", 5)
@@ -24,8 +26,6 @@ df <- merge(x=df1,CustomerAddress,by="customer_id")
 distinct_customers <- distinct(df,customer_id, .keep_all = TRUE )
 #Review data structure
 str(df)
-
-#Review data
 summary_df <- summary(df)
 introduce(df) #introduction of data
 plot_intro(df) #Metrics
@@ -42,36 +42,38 @@ plot_bar(final_df)
 plot_histogram(final_df)
 
 #feature engineering 
- 
-skewness(final_df$Age)#checking the skewness
+ skewness(final_df$Age) #checking the skewness of Age distribution
 final_df <- final_df %>%
-  mutate(cubic_Age = (Age)^(1/3))
-hist(final_df$cubic_Age)
+  mutate(cubic_Age = (Age)^(1/3)) #cubic transformation of Age 
+hist(final_df$cubic_Age) #histogram of Age transformation
 skewness(final_df$cubic, type =2)
-skewness(final_df$list_price) 
+skewness(final_df$list_price)  #checking the skewness of the list_price
 final_df <- final_df %>%
-  mutate(cubic_standard_cost = (standard_cost)^(1/3))#checking the skewness
-hist(final_df$cubic_standard_cost)
-skewness(final_df$cubic_standard_cost) #checking the skewness
+  mutate(cubic_standard_cost = (standard_cost)^(1/3))
+hist(final_df$cubic_standard_cost) 
+skewness(final_df$cubic_standard_cost) ##checking the skewness of standard_cost transformation
 skewness(final_df$past_3_years_bike_related_purchases)
+
 #RFM analysis 
 analysis_date <- lubridate::as_date('2018-01-01')
-rfm_recencydate <- final_df %>% #Recency
+rfm_recencydate <- final_df %>% 
   mutate(analysis_date) %>% 
   mutate(recency_days = (analysis_date)-as.Date(transaction_date)) %>%
-  select(customer_id,recency_days) %>% group_by(customer_id)%>% summarize(recency_days=min(as.numeric(recency_days)))
-rfm_orders <- final_df %>% #frequency
+  select(customer_id,recency_days)%>%
+  group_by(customer_id)%>% 
+  summarize(recency_days=min(as.numeric(recency_days))) #Recent date calculation
+rfm_orders <- final_df %>% 
   group_by(customer_id) %>% 
-  summarise(number_of_orders = as.numeric(n()))
+  summarise(number_of_orders = as.numeric(n())) #number of orders calculation
 rfm_recentvisit <- final_df %>%
   select(customer_id,transaction_date) %>%
   group_by(customer_id) %>%
   summarize(most_recent_visit = max((transaction_date))) %>%
-  mutate(most_recent_visit = as.Date(most_recent_visit))
+  mutate(most_recent_visit = as.Date(most_recent_visit)) #recent visit calculation
 class(rfm_recentvisit$most_recent_visit)
 rfm_revenue <- final_df %>%
   group_by(customer_id) %>%
-  summarize(revenue=sum(list_price))
+  summarize(revenue=sum(list_price)) #revenue calculation
 #rfm customer data table using merging of tables
 rfm_data_consumer1 <- merge(x=rfm_revenue,rfm_recentvisit,by = "customer_id")
 rfm_data_consumer2 <- merge(x=rfm_data_consumer1,rfm_orders,by = "customer_id")
@@ -83,9 +85,13 @@ class(rfm_data_consumer_final$most_recent_visit)
 class(rfm_data_consumer_final$number_of_orders)
 class(rfm_data_consumer_final$recency_days)
 
-analysis_date <- lubridate::as_date("2018-01-01")
+analysis_date <- lubridate::as_date("2018-01-01") #Define analysis date 
 options(max.print = 1000000)
-rfm_table <- rfm_table_customer(rfm_data_consumer_final, customer_id, number_of_orders,recency_days,revenue, analysis_date)
+rfm_table <- rfm_table_customer(rfm_data_consumer_final,
+                                customer_id, number_of_orders,
+                                recency_days,revenue, 
+                                analysis_date) #rfm table formation 
+
 #RFM visualization
 rfm_heatmap(rfm_table)
 rfm_bar_chart(rfm_table) #distributions of RFM score combinations
@@ -137,7 +143,7 @@ sd(X_f)
 #t test of X_r against a null hypothesis that population mean mu_r is 3
 t.test(X_f, mu = 3, alternative = "two.sided")
 
-#RFM model and ROC test
+#Converting segments to binomial variables 1 and 0, 1 for target and 0 for not target
 segment_new <- segments %>% 
   mutate(recency_s = ifelse(recency_score > 3, "HIGH", "LOW"),
          frequency_s = ifelse(frequency_score > 3, "FREQUENT", "INFREQUENT"),
@@ -162,7 +168,7 @@ train_f <-  train %>%
 dim(train)
 dim(test)
 
-#multiple logistic regression
+#multiple logistic regression model
 logistics_model <- glm(segment_s ~ recency_s + frequency_s+monetary_s + gender + cubic_Age + wealth_segment + 
                          past_3_years_bike_related_purchases, data=train_f, family = "binomial")
 # to predict using the logistics regression model, probabilities obtained
@@ -170,7 +176,7 @@ test_f[1:10,]
 logistics_model_prob <- predict(logistics_model, test_f, type = "response")
 head(logistics_model_prob,20)
 
-#prediction 
+#convert probabilities to binomial answers
 prediction <- ifelse(logistics_model_prob > 0.5, 1,0)
 head(prediction,10)
 head(test_f$segment_s,10)
