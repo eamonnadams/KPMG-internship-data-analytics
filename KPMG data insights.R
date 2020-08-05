@@ -4,6 +4,7 @@ install.packages("lubridate")
 install.packages("e1071")
 install.packages("rfm")
 install.packages("caret")
+install.packages("pROC")
 library(readxl)
 library(dplyr)
 library(ggplot2)
@@ -13,6 +14,7 @@ library(lubridate)
 library(e1071)
 library(rfm)
 library(caret)
+library(pROC)
 getwd()
 transactions <- read_excel("KPMG_VI_New_raw_data_update_final_Insights.xlsx",2)
 CustomerDemographics <- read_excel("KPMG_VI_New_raw_data_update_final_Insights.xlsx",4)
@@ -41,10 +43,17 @@ plot_histogram(final_df)
 
 #feature engineering 
  
-skewness(final_df$Age) #checking the skewness
-skewness(final_df$list_price) #checking the skewness
-skewness(final_df$standard_cost) #checking the skewness
-skewness(final_df$postcode)
+skewness(final_df$Age)#checking the skewness
+final_df <- final_df %>%
+  mutate(cubic_Age = (Age)^(1/3))
+hist(final_df$cubic_Age)
+skewness(final_df$cubic, type =2)
+skewness(final_df$list_price) 
+final_df <- final_df %>%
+  mutate(cubic_standard_cost = (standard_cost)^(1/3))#checking the skewness
+hist(final_df$cubic_standard_cost)
+skewness(final_df$cubic_standard_cost) #checking the skewness
+skewness(final_df$past_3_years_bike_related_purchases)
 #RFM analysis 
 analysis_date <- lubridate::as_date('2018-01-01')
 rfm_recencydate <- final_df %>% #Recency
@@ -133,9 +142,9 @@ segment_new <- segments %>%
   mutate(recency_s = ifelse(recency_score > 3, "HIGH", "LOW"),
          frequency_s = ifelse(frequency_score > 3, "FREQUENT", "INFREQUENT"),
          monetary_s = ifelse(monetary_score > 3,"HIGH", "MEDIUM"),
-         segment_s = ifelse(segment %in% c("Champions","Loyal","Potential Loyalists",
+         segment_s = ifelse(segment %in% c("Champions","Loyal Customers","Potential Loyalists",
                                            "New Customers", "Promising", "Need Attention", 
-                                           "About To Sleep", "At Risk", "Can't Lose Them"),1,0))
+                                          "Can't Lose Them"),1,0))
 
 
 #Split data into training and test set
@@ -154,7 +163,7 @@ dim(train)
 dim(test)
 
 #multiple logistic regression
-logistics_model <- glm(segment_s ~ recency_s + frequency_s+monetary_s + gender + Age + wealth_segment + 
+logistics_model <- glm(segment_s ~ recency_s + frequency_s+monetary_s + gender + cubic_Age + wealth_segment + 
                          past_3_years_bike_related_purchases, data=train_f, family = "binomial")
 # to predict using the logistics regression model, probabilities obtained
 test_f[1:10,]
