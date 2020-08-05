@@ -130,9 +130,9 @@ t.test(X_f, mu = 3, alternative = "two.sided")
 
 #RFM model and ROC test
 segment_new <- segments %>% 
-  mutate(recency_s = ifelse(recency_score >= 3, "HIGH", "LOW"),
-         frequency_s = ifelse(frequency_score >= 3, "FREQUENT", "INFREQUENT"),
-         monetary_s = ifelse(monetary_score >= 3,"HIGH", "MEDIUM"),
+  mutate(recency_s = ifelse(recency_score > 3, "HIGH", "LOW"),
+         frequency_s = ifelse(frequency_score > 3, "FREQUENT", "INFREQUENT"),
+         monetary_s = ifelse(monetary_score > 3,"HIGH", "MEDIUM"),
          segment_s = ifelse(segment %in% c("Champions","Loyal","Potential Loyalists",
                                            "New Customers", "Promising", "Need Attention", 
                                            "About To Sleep", "At Risk", "Can't Lose Them"),1,0))
@@ -146,27 +146,31 @@ data2 = sort(sample(nrow(final_table), nrow(final_table)*.7))
 train <- final_table[data2,]
 #creating test data set by not selecting the output row values
 test <- final_table[-data2,]
+test_f <- test %>%
+  filter(gender %in% c("Male","Female"))
+train_f <-  train %>%
+  filter(gender %in% c("Male","Female"))
 dim(train)
 dim(test)
 
 #multiple logistic regression
 logistics_model <- glm(segment_s ~ recency_s + frequency_s+monetary_s + gender + Age + wealth_segment + 
-                         past_3_years_bike_related_purchases, data=train, family = "binomial")
+                         past_3_years_bike_related_purchases, data=train_f, family = "binomial")
 # to predict using the logistics regression model, probabilities obtained
-test[1:10,]
-logistics_model_prob <- predict(logistics_model, test, type = "response")
+test_f[1:10,]
+logistics_model_prob <- predict(logistics_model, test_f, type = "response")
 head(logistics_model_prob,20)
 
 #prediction 
 prediction <- ifelse(logistics_model_prob > 0.5, 1,0)
 head(prediction,10)
-head(test$segment_s,10)
+head(test_f$segment_s,10)
 
 #test of model 
 summary(logistics_model)
-ROC_2 <- roc(test$segment_s, logistics_model_prob)
+ROC_2 <- roc(test_f$segment_s, logistics_model_prob)
 plot(ROC_2, col = "blue")
 auc(ROC_2)
-mean(prediction == test$segment_s)
+mean(prediction == test_f$segment_s)
 
 
