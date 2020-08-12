@@ -156,6 +156,8 @@ segment_new <- segments %>%
 #Split data into training and test set
 set.seed(123)
 final_table <- merge(x=segment_new, final_df,by = "customer_id")
+final_table <- final_table %>%
+  filter(gender %in% c("Male","Female"))
 data2 = sort(sample(nrow(final_table), nrow(final_table)*.7))
 #creating training data set by selecting the output row values
 train <- final_table[data2,]
@@ -188,4 +190,6 @@ plot(ROC_2, col = "blue")
 auc(ROC_2)
 mean(prediction == test_f$segment_s)
 
+#export final_table to excel
+write.table(final_table, file="FinalCustomerTable.csv",row.names = FALSE,sep=",")
 
