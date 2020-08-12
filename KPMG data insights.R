@@ -157,7 +157,10 @@ segment_new <- segments %>%
 set.seed(123)
 final_table <- merge(x=segment_new, final_df,by = "customer_id")
 final_table <- final_table %>%
-  filter(gender %in% c("Male","Female"))
+  filter(gender %in% c("Male","Female") & brand %in% c("Norco Bicycles",
+                                                       "Trek Bicycles", "OHM Cycles",
+                                                        "WeareA2B","Giant Bicycles",
+                                                       "Solex"))
 data2 = sort(sample(nrow(final_table), nrow(final_table)*.7))
 #creating training data set by selecting the output row values
 train <- final_table[data2,]
