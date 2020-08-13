@@ -17,10 +17,13 @@ library(rfm)
 library(caret)
 library(pROC)
 getwd()
-#Import dat from excel 
+#Import data from excel 
 transactions <- read_excel("KPMG_VI_New_raw_data_update_final_Insights.xlsx",2)
 CustomerDemographics <- read_excel("KPMG_VI_New_raw_data_update_final_Insights.xlsx",4)
 CustomerAddress <- read_excel("KPMG_VI_New_raw_data_update_final_Insights.xlsx", 5)
+New_customers <- read_excel("KPMG_VI_New_raw_data_update_final_Insights.xlsx", 3)
+
+
 df1 <- merge(x=transactions,CustomerDemographics, by = "customer_id")
 df <- merge(x=df1,CustomerAddress,by="customer_id")
 distinct_customers <- distinct(df,customer_id, .keep_all = TRUE )
@@ -33,13 +36,26 @@ plot_intro(df) #Metrics
 #Replacing missing data
 plot_missing(df)
 final_df <- set_missing(df, list(0L, "unknown"))
+final_df <- final_df %>% 
+  filter(gender %in% c("Male","Female") & brand != "unknown"
+         & job_industry_category != "unknown" & job_title != "unknown")
 plot_missing(final_df)
 
+#EDA analysis
 #Bar plots to visualise frquency distributions for all discrete features
 plot_bar(final_df)
 
 #Histograms to visualize distributions for all continuous features
 plot_histogram(final_df)
+
+#Categorical data vs continuous data
+final_df %>%
+  ggplot(aes(gender,stat_count = past_3_years_bike_related_purchases,fill = gender))+
+  geom_bar()+
+  ylab("past_3_years_bike_related_purchases")
+ 
+
+
 
 #feature engineering 
  skewness(final_df$Age) #checking the skewness of Age distribution
