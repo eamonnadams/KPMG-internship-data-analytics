@@ -50,11 +50,50 @@ plot_histogram(final_df)
 
 #Categorical data vs continuous data
 final_df %>%
-  ggplot(aes(gender,stat_count = past_3_years_bike_related_purchases,fill = gender))+
-  geom_bar()+
-  ylab("past_3_years_bike_related_purchases")
- 
+  select(gender,past_3_years_bike_related_purchases) %>%
+  group_by(gender) %>%
+  summarize(total_past_purchases = sum(past_3_years_bike_related_purchases)) %>%
+  ggplot(aes(gender,total_past_purchases,fill=gender)) + 
+  geom_bar(stat = "identity") +
+  geom_text(aes(label =total_past_purchases)) +
+  ggtitle("Total Past 3 year purchase by Gender") #total number of purchase in 3 years per gender
 
+final_df %>%
+  select(gender,past_3_years_bike_related_purchases) %>%
+  group_by(gender) %>%
+  summarize(total_past_purchases = sum(past_3_years_bike_related_purchases)) %>%
+  mutate(percent = signif(total_past_purchases/sum(total_past_purchases)*100,4))%>%
+  ggplot(aes(gender,percent,fill=gender)) + 
+  geom_bar(stat = "identity") +
+  geom_text(aes(label =percent))+
+  ggtitle("Percentage Past 3 year purchase by Gender")#percentage number of purchase in 3 years per gender
+
+final_df %>%
+  select(gender,list_price) %>%
+  group_by(gender) %>%
+  summarize(total_sales = sum(list_price)) %>%
+  mutate(percent_sales = signif(total_sales/sum(total_sales)*100,4))%>%
+  ggplot(aes(gender,percent_sales,fill=gender)) + 
+  geom_bar(stat = "identity") +
+  geom_text(aes(label =percent_sales))+
+  ggtitle("Percentage sales by Gender")#percentage number of purchase in 3 years per gender
+
+final_df %>%
+  select(Age,tenure) %>%
+  ggplot(aes(Age,tenure)) +
+  geom_point() +
+  geom_smooth() +
+  ggtitle("Tenure by Age") #Tenure by age
+
+final_df %>%
+  select(Age,wealth_segment) %>%
+  ggplot(aes(wealth_segment,Age)) +
+  geom_boxplot() #Wealth Segment by Age
+
+final_df %>%
+  select(owns_car,state) %>%
+  ggplot(aes(state,stat_count = owns_car,fill = owns_car)) +
+  geom_bar(position = "dodge")
 
 
 #feature engineering 
