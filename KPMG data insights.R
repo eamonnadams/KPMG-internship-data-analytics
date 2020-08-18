@@ -48,7 +48,8 @@ plot_bar(final_df)
 #Histograms to visualize distributions for all continuous features
 plot_histogram(final_df)
 
-#Categorical data vs continuous data
+##Categorical data vs continuous data
+#total number of purchase in 3 years per gender
 final_df %>%
   select(gender,past_3_years_bike_related_purchases) %>%
   group_by(gender) %>%
@@ -56,8 +57,8 @@ final_df %>%
   ggplot(aes(gender,total_past_purchases,fill=gender)) + 
   geom_bar(stat = "identity") +
   geom_text(aes(label =total_past_purchases)) +
-  ggtitle("Total Past 3 year purchase by Gender") #total number of purchase in 3 years per gender
-
+  ggtitle("Total Past 3 year purchase by Gender") 
+#percentage number of purchase in 3 years per gender
 final_df %>%
   select(gender,past_3_years_bike_related_purchases) %>%
   group_by(gender) %>%
@@ -66,8 +67,8 @@ final_df %>%
   ggplot(aes(gender,percent,fill=gender)) + 
   geom_bar(stat = "identity") +
   geom_text(aes(label =percent))+
-  ggtitle("Percentage Past 3 year purchase by Gender")#percentage number of purchase in 3 years per gender
-
+  ggtitle("Percentage Past 3 year purchase by Gender")
+#percentage sales per gender
 final_df %>%
   select(gender,list_price) %>%
   group_by(gender) %>%
@@ -76,40 +77,50 @@ final_df %>%
   ggplot(aes(gender,percent_sales,fill=gender)) + 
   geom_bar(stat = "identity") +
   geom_text(aes(label =percent_sales))+
-  ggtitle("Percentage sales by Gender")#percentage number of purchase in 3 years per gender
-
+  ggtitle("Percentage sales by Gender")
+#Tenure by age
 final_df %>%
   select(Age,tenure) %>%
   ggplot(aes(Age,tenure)) +
   geom_point() +
   geom_smooth() +
-  ggtitle("Tenure by Age") #Tenure by age
-
-final_df %>%
-  select(Age,wealth_segment) %>%
-  ggplot(aes(wealth_segment,Age)) +
-  geom_boxplot() #Wealth Segment by Age
-
+  ggtitle("Tenure by Age") 
+#Cars owned per State
 final_df %>%
   select(owns_car,state) %>%
   ggplot(aes(state,stat_count = owns_car,fill = owns_car)) +
-  geom_bar(position = "dodge")
+  geom_bar(position = "dodge") +
+  ggtitle("Cars owned by state")
+#Brands amounts sold per gender
+final_df %>%
+  select(gender,brand) %>%
+  ggplot(aes(brand,stat_count = gender,fill = gender)) +
+  geom_bar(position = "dodge") +
+  ggtitle("Brand amounts by gender")
+#wealth segment per state
+final_df %>%
+  select(wealth_segment,state) %>%
+  ggplot(aes(state,stat_count = wealth_segment,fill = wealth_segment)) +
+  geom_bar(position = "dodge") +
+  ggtitle("Wealth segment per state")
 
 
-#feature engineering 
- skewness(final_df$Age) #checking the skewness of Age distribution
-final_df <- final_df %>%
-  mutate(cubic_Age = (Age)^(1/3)) #cubic transformation of Age 
-hist(final_df$cubic_Age) #histogram of Age transformation
-skewness(final_df$cubic, type =2)
-skewness(final_df$list_price)  #checking the skewness of the list_price
-final_df <- final_df %>%
-  mutate(cubic_standard_cost = (standard_cost)^(1/3))
-hist(final_df$cubic_standard_cost) 
-skewness(final_df$cubic_standard_cost) ##checking the skewness of standard_cost transformation
+
+##feature engineering
+#checking the skewness of Age distribution
+skewness(final_df$Age)
+hist(final_df$Age) #distribution of Age
+#checking the skewness of the list_price
+skewness(final_df$list_price)  
+hist(final_df$list_price) #distribution of list_price
+#checking the skewness of standard_cost 
+skewness(final_df$standard_cost) 
+hist(final_df$standard_cost)
+#checking the skewness of past_3_years_bike_related_purchases
 skewness(final_df$past_3_years_bike_related_purchases)
+hist(final_df$past_3_years_bike_related_purchases)
 
-#RFM analysis 
+##RFM analysis 
 analysis_date <- lubridate::as_date('2018-01-01')
 rfm_recencydate <- final_df %>% 
   mutate(analysis_date) %>% 
@@ -198,6 +209,12 @@ sd(X_f)
 #t test of X_r against a null hypothesis that population mean mu_r is 3
 t.test(X_f, mu = 3, alternative = "two.sided")
 
+X_f <- sample(rfm_table$monetary_bins, 1000, replace = TRUE)#sample size 1000 of recency score
+mean(X_f)
+sd(X_f)
+#t test of X_r against a null hypothesis that population mean mu_r is 3
+t.test(X_f, mu = 3, alternative = "two.sided")
+
 #Converting segments to binomial variables 1 and 0, 1 for target and 0 for not target
 segment_new <- segments %>% 
   mutate(recency_s = ifelse(recency_score > 3, "HIGH", "LOW"),
@@ -206,7 +223,6 @@ segment_new <- segments %>%
          segment_s = ifelse(segment %in% c("Champions","Loyal Customers","Potential Loyalists",
                                            "New Customers", "Promising", "Need Attention", 
                                           "Can't Lose Them"),1,0))
-
 
 #Split data into training and test set
 set.seed(123)
@@ -228,7 +244,7 @@ train_f <-  train %>%
 dim(train)
 dim(test)
 
-#multiple logistic regression model
+##multiple logistic regression model
 logistics_model <- glm(segment_s ~ recency_s + frequency_s+monetary_s + gender + cubic_Age + wealth_segment + 
                          past_3_years_bike_related_purchases, data=train_f, family = "binomial")
 # to predict using the logistics regression model, probabilities obtained
