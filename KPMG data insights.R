@@ -267,3 +267,9 @@ mean(prediction == test_f$segment_s)
 #export final_table to excel
 write.table(final_table, file="FinalCustomerTable.csv",row.names = FALSE,sep=",")
 
+#Most valuable new customers
+Most_valuable_new_customers <- New_customers %>%
+  filter(wealth_segment %in% c("Mass Customer","High Net Worth") &
+           job_industry_category %in% c("Financial Services","Manufacturing",
+                                        "Health","Retail", "Property"))
+write.table(Most_valuable_new_customers, file="TargetCustomerTable.csv",row.names = FALSE,sep=",")
